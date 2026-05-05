@@ -1,0 +1,40 @@
+# Env
+.env
+.env.local
+.env.*.local
+
+# Go
+/backend/cmd/server/server
+*.exe
+*.test
+*.out
+go.work
+go.work.sum
+
+# Python (ingestion scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+venv/
+
+# Node / Vue / Vite
+node_modules/
+dist/
+.vite/
+*.log
+npm-debug.log*
+
+# Local script caches (e.g. downloaded Scryfall bulk data)
+/scripts/.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
