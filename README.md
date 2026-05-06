@@ -2,6 +2,8 @@
 
 A RAG-powered Magic: The Gathering assistant for deck building, rules lookup, and card search.
 
+> Part of the [`megajess/tutorai-workspace`](https://github.com/megajess/tutorai-workspace) — see there for full system architecture and context.
+
 ## Features
 
 - **Deck Building** — Get card recommendations by color identity, strategy, format, and budget
