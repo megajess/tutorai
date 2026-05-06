@@ -25,12 +25,12 @@ Retrieval is handled by a separate [rag-data-service](https://github.com/megajes
 | Embeddings | `nomic-embed-text` via Ollama (owned by rag-data-service) |
 | Data Backend | rag-data-service (REST API) |
 | App Backend | Go 1.22+ with Chi router |
-| Ingestion Scripts | Python 3.11+ |
+| Ingestion Scripts | Python 3.11+ (lives in `rag-data-service`) |
 | Frontend | Vue 3 (TypeScript) |
 
 ## Self-Hosting
 
-You can run TutorAI against your own data service instance. Set `DATA_SERVICE_URL` and `DATA_SERVICE_API_KEY` in your `.env`, run the ingestion scripts to build your own corpus, and you're fully independent of the hosted service.
+You can run TutorAI against your own data service instance. Set `DATA_SERVICE_URL` and `DATA_SERVICE_API_KEY` in your `.env` and point it at your own `rag-data-service` deployment. The ingestion scripts and curated corpus are not distributed — you'll need to bring your own data.
 
 See [SETUP.md](./SETUP.md) for full instructions.
 
@@ -59,9 +59,7 @@ tutorai/                     (this repo — public)
 │   │   ├── llm/             # Ollama HTTP client
 │   │   └── context/         # Prompt / context assembly
 │   └── config/              # Env var loading
-├── scripts/                 # Python ingestion scripts (push raw text to data service)
 ├── data/
-│   ├── color_identity_lookup.json
-│   └── slang_glossary.json
+│   └── color_identity_lookup.json
 └── frontend/                # Vue 3 + TypeScript + Tailwind
 ```

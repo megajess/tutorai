@@ -80,7 +80,7 @@
 
 **Context:** The project serves dual purposes — a portfolio piece (needs to be publicly visible) and a potential monetization vehicle (curated data is the moat). Releasing everything open source gives away the data; releasing nothing undermines the portfolio value.
 
-**Reasoning:** The application code (retrieval pipeline, intent classification, prompt assembly) is not a competitive advantage — RAG patterns are well understood. The curated and cleaned corpus (card data, rules chunking decisions, slang glossary) is the real work. Keeping the data private while open-sourcing the app gives users something to learn from and fork, while preserving the value of the data layer. Users who want to self-host can run their own data service with their own corpus using the public ingestion scripts.
+**Reasoning:** The application code (retrieval pipeline, intent classification, prompt assembly) is not a competitive advantage — RAG patterns are well understood. The curated and cleaned corpus (card data, rules chunking decisions, slang glossary) is the real work. Keeping the data private while open-sourcing the app gives users something to learn from and fork, while preserving the value of the data layer.
 
 **Consequences:** The TutorAI backend communicates with the data service over HTTP rather than calling Chroma/SQLite directly. Adds a network hop in the local dev setup, but this is acceptable and actually makes the production architecture cleaner. The data service is designed to be reusable across future RAG projects.
 
@@ -101,6 +101,20 @@
 **Status:** Accepted
 
 ---
+
+---
+
+## 2026-05-06 — Ingestion scripts and slang glossary moved to private repo
+
+**Decision:** The Python ingestion scripts (`ingest_cards.py`, `ingest_rules.py`, `ingest_slang.py`) and `slang_glossary.json` live in `rag-data-service`, not `tutorai`.
+
+**Context:** Originally planned to include ingestion scripts in the public `tutorai` repo so users could self-host with their own corpus.
+
+**Reasoning:** Publishing the ingestion scripts alongside the private data repo defeats the purpose of keeping the data private. The scripts are a precise recipe for recreating the curated corpus from freely accessible sources. Anyone with the scripts can reproduce the dataset without ever accessing the private repo. The ingestion pipeline is part of the proprietary layer, not the application layer.
+
+**Consequences:** Self-hosters cannot use the hosted ingestion pipeline — they must build their own. The `tutorai` public repo contains no data artifacts or ingestion logic.
+
+**Status:** Accepted
 
 ---
 

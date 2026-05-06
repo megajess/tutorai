@@ -122,8 +122,10 @@ Terms not in the rulebook that players use when asking for recommendations:
 
 ## Adding New Data
 
-To add new glossary terms, edit `data/slang_glossary.json` and re-run:
+To add new glossary terms, edit `data/slang_glossary.json` in `rag-data-service` and re-run:
 
 ```bash
 python scripts/ingest_slang.py --refresh
 ```
+
+Both the glossary file and the ingestion scripts live in the private `rag-data-service` repo.

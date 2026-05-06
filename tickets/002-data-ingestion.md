@@ -1,13 +1,13 @@
 # Ticket 002 — Data Ingestion
 
 ## Status
-`Todo`
+`Moved`
 
 ## Type
 `Feature`
 
 ## Summary
-Build the three ingestion scripts that populate the data service's `tutorai` namespace with card data, rules chunks, and the slang glossary. These are offline scripts — they download source data, chunk and normalise it, and POST raw text + metadata to `rag-data-service`. They never embed anything or write to Chroma/SQLite directly; the data service owns those concerns.
+~~Moved to `rag-data-service` ticket 007.~~ The ingestion scripts and slang glossary are proprietary assets that live in the private repo. See `rag-data-service/tickets/007-data-ingestion.md`.
 
 ## Background / Context
 See `docs/data.md` for the full breakdown of each data source, field mappings, and chunking strategy. The ingestion layer is the foundation of the RAG system — if the data is poorly structured here, retrieval quality suffers downstream. The data service must be running before any script is invoked.

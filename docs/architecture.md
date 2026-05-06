@@ -19,7 +19,8 @@ This is an open-core model: the app code demonstrates the architecture publicly 
 | Context assembly + prompts | Go | `tutorai` | Public |
 | Ollama LLM integration | Go | `tutorai` | Public |
 | Data service client | Go | `tutorai` | Public |
-| Ingestion scripts | Python | `tutorai` | Public |
+| Ingestion scripts | Python | `rag-data-service` | **Private** |
+| Slang glossary | JSON | `rag-data-service` | **Private** |
 | Color identity lookup | JSON | `tutorai` | Public |
 | Data service API | Python | `rag-data-service` | **Private** |
 | Vector DB (Chroma) | Python | `rag-data-service` | **Private** |
@@ -72,13 +73,13 @@ graph TD
 - **Key responsibilities:** HTTP routing, intent classification, data service client calls, context/prompt assembly, Ollama HTTP calls
 - **Does NOT handle:** Vector search, data storage — all delegated to the data service
 
-### Python Ingestion Scripts (`tutorai` — public)
+### Python Ingestion Scripts (`rag-data-service` — private)
 - **What it does:** Downloads source data, normalises and chunks it, then POSTs **raw text + metadata** to the data service `/ingest/tutorai` endpoint. Embedding is handled inside the data service.
-- **Lives in:** `/scripts/`
+- **Lives in:** `rag-data-service/scripts/`
 - **Language:** Python — better ecosystem for JSON wrangling and text chunking
 - **Key responsibilities:** Fetch Scryfall bulk data, chunk rules by rule number, load slang glossary, POST batches to the data service
 - **Does NOT handle:** Embedding, vector storage, SQLite writes — all delegated to the data service
-- **Why public:** Users who self-host can run these against their own data service instance
+- **Why private:** Publishing these scripts would allow anyone to recreate the curated dataset, which is the proprietary asset of the service
 
 ### RAG Data Service (`rag-data-service` — private, Python/FastAPI)
 - **What it does:** Hosts Chroma vector DBs and SQLite card data. Exposes a REST API for retrieval and ingest. Serves multiple RAG apps via namespaced endpoints.
@@ -122,14 +123,8 @@ tutorai/
 │   │       └── assemble.go      # Prompt / context assembly
 │   └── config/
 │       └── config.go            # Env var loading
-├── scripts/                     # Python ingestion scripts
-│   ├── requirements.txt
-│   ├── ingest_cards.py
-│   ├── ingest_rules.py
-│   └── ingest_slang.py
 ├── data/
-│   ├── color_identity_lookup.json
-│   └── slang_glossary.json
+│   └── color_identity_lookup.json
 ├── frontend/
 │   └── src/
 │       ├── App.vue
@@ -148,6 +143,13 @@ rag-data-service/
 ├── .env.example
 ├── requirements.txt
 ├── main.py
+├── scripts/                     # Data ingestion scripts (private)
+│   ├── requirements.txt
+│   ├── ingest_cards.py
+│   ├── ingest_rules.py
+│   └── ingest_slang.py
+├── data/
+│   └── slang_glossary.json      # Hand-curated slang corpus (private)
 ├── api/
 │   ├── retrieve.py          # POST /retrieve/{app_id}
 │   └── ingest.py            # POST /ingest/{app_id}
@@ -180,7 +182,7 @@ rag-data-service/
 5. Go backend assembles prompt, calls Ollama, returns response
 
 ## Self-Hosting
-Users who clone `tutorai` set `DATA_SERVICE_URL` and `DATA_SERVICE_API_KEY` in `.env`, run the Python ingestion scripts against their own data service instance, and are fully independent of the hosted service.
+Users who clone `tutorai` set `DATA_SERVICE_URL` and `DATA_SERVICE_API_KEY` in `.env` and point the app at their own running `rag-data-service` instance. The ingestion scripts and curated corpus live in the private repo and are not distributed — self-hosters bring their own data.
 
 ## Key Constraints & Assumptions
 - Data service must be running before the Go backend can answer questions
