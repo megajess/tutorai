@@ -118,6 +118,20 @@
 
 ---
 
+## 2026-05-07 — Tailwind CSS v4 with @tailwindcss/vite instead of PostCSS CLI config
+
+**Decision:** Use Tailwind CSS v4 with the `@tailwindcss/vite` plugin. Add `@import "tailwindcss"` to the main CSS entry point. No `tailwind.config.js` or `postcss.config.js` created.
+
+**Context:** The ticket specified "add Tailwind via postcss." `npm install tailwindcss` installs v4, which dropped the `tailwindcss init` CLI and the JS config file in favour of a CSS-first configuration approach.
+
+**Reasoning:** Tailwind v4 is the current version and is the correct target going forward. The v3 PostCSS approach (`npx tailwindcss init -p`) no longer exists in v4. The Vite plugin (`@tailwindcss/vite`) is the recommended v4 integration for Vite projects — it replaces the PostCSS plugin and gives faster HMR.
+
+**Consequences:** No `tailwind.config.js` needed for basic use. Theme customisation (if needed later) is done in CSS with `@theme` directives, not in a JS config file.
+
+**Status:** Accepted
+
+---
+
 ## 2026-05-05 — Go for app backend, Python for ingestion scripts
 
 **Decision:** The TutorAI app backend is written in Go. The ingestion scripts stay in Python. The private `rag-data-service` is also Python.

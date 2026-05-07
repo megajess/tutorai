@@ -1,31 +1,30 @@
 # Ticket 001 — Project Scaffold & Tooling Setup
 
 ## Status
-`Todo`
+`Done`
 
 ## Type
 `Chore`
 
 ## Summary
-Set up the initial project structure, install dependencies, and configure dev tooling for both the Go backend and Python ingestion scripts. Creates the folder layout defined in `architecture.md` and ensures both the Go server and Vue frontend start without errors. No business logic — just a clean foundation for every subsequent ticket.
+Set up the initial project structure, install dependencies, and configure dev tooling for the Go backend and Vue frontend. Creates the folder layout defined in `architecture.md` and ensures both the Go server and Vue frontend start without errors. No business logic — just a clean foundation for every subsequent ticket.
+
+> **Note:** The Python ingestion scripts (`ingest_cards.py`, `ingest_rules.py`, `ingest_slang.py`) and their dependencies live in the private `rag-data-service` repo (ticket 007), not here.
 
 ## Acceptance Criteria
-- [ ] Folder structure matches `docs/architecture.md` exactly
-- [ ] Go module initialised (`go mod init`) with Chi router added as a dependency
-- [ ] Go backend starts with `go run ./backend/cmd/server` and returns `{"status": "ok"}` from `GET /health`
-- [ ] `golangci-lint` runs without errors on the empty codebase
-- [ ] `go test ./...` passes with one placeholder test
-- [ ] Python `scripts/requirements.txt` includes: `httpx`, `python-dotenv`, `tqdm`, `black`, `ruff`, `pytest` (no `chromadb` — scripts only POST raw text to the data service, they never embed or write to Chroma directly)
-- [ ] `black .` and `ruff check .` pass on empty scripts directory
-- [ ] Frontend scaffolded with Vite + Vue 3 + TypeScript + Tailwind — runs with `npm run dev`
-- [ ] `.env.example` lists all required environment variables (no values): `DATA_SERVICE_URL`, `DATA_SERVICE_API_KEY`, `OLLAMA_BASE_URL`, `OLLAMA_LLM_MODEL`
-- [ ] `CLAUDE.md` is present at project root
+- [x] Folder structure matches `docs/architecture.md` exactly
+- [x] Go module initialised (`go mod init`) with Chi router added as a dependency
+- [x] Go backend starts with `go run ./backend/cmd/server` and returns `{"status": "ok"}` from `GET /health`
+- [x] `golangci-lint` runs without errors on the empty codebase
+- [x] `go test ./...` passes with one placeholder test
+- [x] Frontend scaffolded with Vite + Vue 3 + TypeScript + Tailwind — runs with `npm run dev`
+- [x] `.env.example` lists all required environment variables (no values): `DATA_SERVICE_URL`, `DATA_SERVICE_API_KEY`, `OLLAMA_BASE_URL`, `OLLAMA_LLM_MODEL`
+- [x] `CLAUDE.md` is present at project root
 
 ## Implementation Notes
 - Follow folder structure in `docs/architecture.md` exactly — use `backend/cmd/server/main.go` as the entry point
 - Go backend: `github.com/go-chi/chi/v5` for routing, `github.com/joho/godotenv` for env loading
 - Vue 3 scaffold: `npm create vite@latest frontend -- --template vue-ts`, then add Tailwind via postcss
-- Python scripts are standalone — no shared module, just a flat `/scripts/` directory with `requirements.txt`
 
 ## Relevant Areas
 - `docs/architecture.md`
