@@ -4,6 +4,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -50,9 +51,9 @@ type chatRequest struct {
 	Query string `json:"query"`
 }
 
+// chatResponse is kept for use in tests.
 type chatResponse struct {
-	Response string    `json:"response"`
-	Usage    *llm.Usage `json:"usage,omitempty"`
+	Response string `json:"response"`
 }
 
 type errorResponse struct {
@@ -101,20 +102,52 @@ func (h *ChatHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Assemble prompt and call the LLM.
-	prompt := appcontext.Assemble(query, results)
-	response, usage, err := llm.Generate(ctx, h.httpClient, h.cfg.OllamaBaseURL, h.cfg.OllamaLLMModel, prompt)
-	if err != nil {
-		var unavailable *llm.UnavailableError
-		if errors.As(err, &unavailable) {
-			writeJSON(w, http.StatusServiceUnavailable, errorResponse{Error: "LLM unavailable"})
-			return
-		}
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+	// Obtain flusher for SSE — fails gracefully if the transport doesn't support it.
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "streaming not supported"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, chatResponse{Response: response, Usage: &usage})
+	// SSE headers are set lazily on the first chunk so that pre-stream errors
+	// (e.g. LLM immediately unreachable) can still return a plain JSON 503.
+	sseStarted := false
+	writeSSE := func(v any) {
+		if !sseStarted {
+			w.Header().Set("Content-Type", "text/event-stream")
+			w.Header().Set("Cache-Control", "no-cache")
+			w.Header().Set("Connection", "keep-alive")
+			sseStarted = true
+		}
+		encoded, _ := json.Marshal(v)
+		fmt.Fprintf(w, "data: %s\n\n", encoded)
+		flusher.Flush()
+	}
+
+	prompt := appcontext.Assemble(query, results)
+	usage, err := llm.Stream(ctx, h.httpClient, h.cfg.OllamaBaseURL, h.cfg.OllamaLLMModel, prompt, func(chunk string) {
+		writeSSE(map[string]string{"chunk": chunk})
+	})
+
+	if err != nil {
+		var unavailable *llm.UnavailableError
+		if errors.As(err, &unavailable) {
+			if !sseStarted {
+				writeJSON(w, http.StatusServiceUnavailable, errorResponse{Error: "LLM unavailable"})
+				return
+			}
+			writeSSE(map[string]string{"error": "LLM unavailable"})
+			return
+		}
+		if !sseStarted {
+			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+			return
+		}
+		writeSSE(map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeSSE(map[string]any{"done": true, "usage": usage})
 }
 
 // extractCardFilters scans the query for color identity, format, and price

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bufio"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -14,18 +15,20 @@ import (
 
 // mockOllama returns "general" on the first call (intent classification) and
 // a canned LLM response on every subsequent call.
+// Responses are newline-delimited JSON (Ollama streaming format).
 func mockOllama(t *testing.T) *httptest.Server {
 	t.Helper()
 	var callCount atomic.Int32
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		n := callCount.Add(1)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/x-ndjson")
 		content := "general"
 		if n > 1 {
 			content = "Deathtouch is a keyword ability that causes damage dealt by a source with deathtouch to be considered lethal."
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"message": map[string]string{"content": content},
+			"done":    true,
 		})
 	}))
 }
@@ -55,6 +58,33 @@ func newTestHandler(t *testing.T, ollamaURL, dataURL string) *ChatHandler {
 	return NewChatHandler(cfg, http.DefaultClient, lookup, client)
 }
 
+// parseSSEChunks reads all SSE events from an httptest.ResponseRecorder body
+// and returns the concatenated chunk text and the done event payload.
+func parseSSEChunks(t *testing.T, body *strings.Reader) (text string, done map[string]any, errEvent string) {
+	t.Helper()
+	scanner := bufio.NewScanner(body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.HasPrefix(line, "data: ") {
+			continue
+		}
+		var event map[string]any
+		if err := json.Unmarshal([]byte(line[6:]), &event); err != nil {
+			t.Fatalf("parse SSE event: %v", err)
+		}
+		if chunk, ok := event["chunk"].(string); ok {
+			text += chunk
+		}
+		if _, ok := event["done"]; ok {
+			done = event
+		}
+		if errMsg, ok := event["error"].(string); ok {
+			errEvent = errMsg
+		}
+	}
+	return
+}
+
 func TestChatHandler_ReturnsNonEmptyResponse(t *testing.T) {
 	ollama := mockOllama(t)
 	defer ollama.Close()
@@ -73,12 +103,16 @@ func TestChatHandler_ReturnsNonEmptyResponse(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	var resp chatResponse
-	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
-		t.Fatalf("decode response: %v", err)
+	if ct := w.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/event-stream") {
+		t.Fatalf("expected text/event-stream, got %q", ct)
 	}
-	if resp.Response == "" {
-		t.Error("expected non-empty response field")
+
+	text, _, errEvent := parseSSEChunks(t, strings.NewReader(w.Body.String()))
+	if errEvent != "" {
+		t.Fatalf("unexpected SSE error: %s", errEvent)
+	}
+	if text == "" {
+		t.Error("expected non-empty streamed text")
 	}
 }
 
@@ -111,7 +145,8 @@ func TestChatHandler_OllamaUnreachableReturns503(t *testing.T) {
 
 	handler.ServeHTTP(w, req)
 
-	// Intent classification fails → falls back to general, then LLM call fails → 503.
+	// Intent classification fails → falls back to general, then LLM stream
+	// fails before any chunk → handler returns plain JSON 503.
 	if w.Code != http.StatusServiceUnavailable {
 		t.Errorf("expected 503, got %d: %s", w.Code, w.Body.String())
 	}

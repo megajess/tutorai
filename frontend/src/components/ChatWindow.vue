@@ -23,6 +23,12 @@ async function scrollToBottom() {
   }
 }
 
+function scrollSync() {
+  if (messagesEl.value) {
+    messagesEl.value.scrollTop = messagesEl.value.scrollHeight
+  }
+}
+
 async function submit() {
   const query = input.value.trim()
   if (!query || loading.value) return
@@ -32,11 +38,25 @@ async function submit() {
   messages.value.push({ role: 'user', text: query })
   await scrollToBottom()
 
+  // Add empty assistant message — text fills in as chunks arrive.
   loading.value = true
+  messages.value.push({ role: 'assistant', text: '' })
+  const assistantIdx = messages.value.length - 1
+  let firstChunk = true
+
   try {
-    const { text, usage } = await sendMessage(query)
-    messages.value.push({ role: 'assistant', text, usage })
+    const usage = await sendMessage(query, (chunk) => {
+      if (firstChunk) {
+        loading.value = false
+        firstChunk = false
+      }
+      messages.value[assistantIdx].text += chunk
+      scrollSync()
+    })
+    messages.value[assistantIdx].usage = usage
   } catch (err) {
+    // Remove the empty assistant placeholder on error.
+    messages.value.splice(assistantIdx, 1)
     error.value = err instanceof Error ? err.message : 'An unexpected error occurred.'
   } finally {
     loading.value = false
@@ -72,7 +92,7 @@ function handleKeydown(e: KeyboardEvent) {
         :class="msg.role === 'user' ? 'chat-message--user' : 'chat-message--assistant'"
       >
         <div class="chat-message__body">
-          <div class="chat-bubble">{{ msg.text }}</div>
+          <div v-if="msg.text" class="chat-bubble">{{ msg.text }}</div>
           <div
             v-if="DEV && msg.role === 'assistant' && msg.usage"
             class="chat-token-badge"
@@ -85,9 +105,13 @@ function handleKeydown(e: KeyboardEvent) {
 
       <div v-if="loading" class="chat-message chat-message--assistant">
         <div class="chat-bubble chat-bubble--loading">
-          <span class="dot" />
-          <span class="dot" />
-          <span class="dot" />
+          <div class="mtg-spinner">
+            <span class="mtg-dot mtg-dot--w" />
+            <span class="mtg-dot mtg-dot--u" />
+            <span class="mtg-dot mtg-dot--b" />
+            <span class="mtg-dot mtg-dot--r" />
+            <span class="mtg-dot mtg-dot--g" />
+          </div>
         </div>
       </div>
     </div>
@@ -222,25 +246,40 @@ function handleKeydown(e: KeyboardEvent) {
   border-bottom-left-radius: 4px;
 }
 
-/* ── Loading dots ── */
+/* ── MTG spinner ── */
 .chat-bubble--loading {
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 12px 16px;
+  justify-content: center;
 }
-.dot {
-  width: 7px;
-  height: 7px;
+.mtg-spinner {
+  /* Change these two values to resize the whole spinner */
+  --dot: 4px;
+  --orbit: 6px;
+
+  width: calc(var(--orbit) * 2 + var(--dot));
+  height: calc(var(--orbit) * 2 + var(--dot));
+  position: relative;
+  animation: mtg-rotate 1.4s linear infinite;
+}
+.mtg-dot {
+  width: var(--dot);
+  height: var(--dot);
   border-radius: 50%;
-  background: var(--text);
-  animation: blink 1.2s infinite ease-in-out;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: calc(var(--dot) / -2) 0 0 calc(var(--dot) / -2);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.35);
 }
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0.2; }
-  40% { opacity: 1; }
+.mtg-dot--w { background: #f0c040; transform: rotate(0deg)   translateY(calc(-1 * var(--orbit))); }
+.mtg-dot--u { background: #3b82f6; transform: rotate(72deg)  translateY(calc(-1 * var(--orbit))); }
+.mtg-dot--b { background: #1a1a1a; transform: rotate(144deg) translateY(calc(-1 * var(--orbit))); }
+.mtg-dot--r { background: #ef4444; transform: rotate(216deg) translateY(calc(-1 * var(--orbit))); }
+.mtg-dot--g { background: #16a34a; transform: rotate(288deg) translateY(calc(-1 * var(--orbit))); }
+@keyframes mtg-rotate {
+  to { transform: rotate(360deg); }
 }
 
 /* ── Error banner ── */
