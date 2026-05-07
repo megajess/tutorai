@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
-import { sendMessage } from '../api/chat'
+import { sendMessage, type TokenUsage } from '../api/chat'
+
+const DEV = import.meta.env.DEV
 
 interface Message {
   role: 'user' | 'assistant'
   text: string
+  usage?: TokenUsage
 }
 
 const messages = ref<Message[]>([])
@@ -31,8 +34,8 @@ async function submit() {
 
   loading.value = true
   try {
-    const response = await sendMessage(query)
-    messages.value.push({ role: 'assistant', text: response })
+    const { text, usage } = await sendMessage(query)
+    messages.value.push({ role: 'assistant', text, usage })
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'An unexpected error occurred.'
   } finally {
@@ -68,7 +71,16 @@ function handleKeydown(e: KeyboardEvent) {
         class="chat-message"
         :class="msg.role === 'user' ? 'chat-message--user' : 'chat-message--assistant'"
       >
-        <div class="chat-bubble">{{ msg.text }}</div>
+        <div class="chat-message__body">
+          <div class="chat-bubble">{{ msg.text }}</div>
+          <div
+            v-if="DEV && msg.role === 'assistant' && msg.usage"
+            class="chat-token-badge"
+            :title="`Prompt: ${msg.usage.prompt_tokens} · Completion: ${msg.usage.completion_tokens}`"
+          >
+            {{ msg.usage.total_tokens }} tokens
+          </div>
+        </div>
       </div>
 
       <div v-if="loading" class="chat-message chat-message--assistant">
@@ -165,10 +177,33 @@ function handleKeydown(e: KeyboardEvent) {
 .chat-message--assistant {
   justify-content: flex-start;
 }
+.chat-message__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 72%;
+}
+.chat-message--user .chat-message__body {
+  align-items: flex-end;
+}
+.chat-message--assistant .chat-message__body {
+  align-items: flex-start;
+}
+
+/* ── Token badge (dev only) ── */
+.chat-token-badge {
+  font-size: 11px;
+  color: var(--text);
+  opacity: 0.6;
+  font-family: var(--mono);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--code-bg);
+  cursor: default;
+}
 
 /* ── Bubbles ── */
 .chat-bubble {
-  max-width: 72%;
   padding: 10px 14px;
   border-radius: 16px;
   font-size: 15px;

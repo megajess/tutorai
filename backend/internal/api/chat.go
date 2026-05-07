@@ -51,7 +51,8 @@ type chatRequest struct {
 }
 
 type chatResponse struct {
-	Response string `json:"response"`
+	Response string    `json:"response"`
+	Usage    *llm.Usage `json:"usage,omitempty"`
 }
 
 type errorResponse struct {
@@ -102,7 +103,7 @@ func (h *ChatHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Assemble prompt and call the LLM.
 	prompt := appcontext.Assemble(query, results)
-	response, err := llm.Generate(ctx, h.httpClient, h.cfg.OllamaBaseURL, h.cfg.OllamaLLMModel, prompt)
+	response, usage, err := llm.Generate(ctx, h.httpClient, h.cfg.OllamaBaseURL, h.cfg.OllamaLLMModel, prompt)
 	if err != nil {
 		var unavailable *llm.UnavailableError
 		if errors.As(err, &unavailable) {
@@ -113,7 +114,7 @@ func (h *ChatHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, chatResponse{Response: response})
+	writeJSON(w, http.StatusOK, chatResponse{Response: response, Usage: &usage})
 }
 
 // extractCardFilters scans the query for color identity, format, and price
