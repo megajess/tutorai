@@ -1,1 +1,91 @@
-{}
+{
+  "azorius": ["W", "U"],
+  "wu": ["W", "U"],
+  "white blue": ["W", "U"],
+  "blue white": ["W", "U"],
+
+  "dimir": ["U", "B"],
+  "ub": ["U", "B"],
+  "blue black": ["U", "B"],
+  "black blue": ["U", "B"],
+
+  "rakdos": ["B", "R"],
+  "br": ["B", "R"],
+  "black red": ["B", "R"],
+  "red black": ["B", "R"],
+
+  "gruul": ["R", "G"],
+  "rg": ["R", "G"],
+  "red green": ["R", "G"],
+  "green red": ["R", "G"],
+
+  "selesnya": ["G", "W"],
+  "gw": ["G", "W"],
+  "green white": ["G", "W"],
+  "white green": ["G", "W"],
+
+  "orzhov": ["W", "B"],
+  "wb": ["W", "B"],
+  "white black": ["W", "B"],
+  "black white": ["W", "B"],
+
+  "izzet": ["U", "R"],
+  "ur": ["U", "R"],
+  "blue red": ["U", "R"],
+  "red blue": ["U", "R"],
+
+  "golgari": ["B", "G"],
+  "bg": ["B", "G"],
+  "black green": ["B", "G"],
+  "green black": ["B", "G"],
+
+  "boros": ["R", "W"],
+  "rw": ["R", "W"],
+  "red white": ["R", "W"],
+  "white red": ["R", "W"],
+
+  "simic": ["G", "U"],
+  "gu": ["G", "U"],
+  "green blue": ["G", "U"],
+  "blue green": ["G", "U"],
+
+  "bant": ["G", "W", "U"],
+  "gwu": ["G", "W", "U"],
+  "green white blue": ["G", "W", "U"],
+
+  "esper": ["W", "U", "B"],
+  "wub": ["W", "U", "B"],
+  "white blue black": ["W", "U", "B"],
+
+  "grixis": ["U", "B", "R"],
+  "ubr": ["U", "B", "R"],
+  "blue black red": ["U", "B", "R"],
+
+  "jund": ["B", "R", "G"],
+  "brg": ["B", "R", "G"],
+  "black red green": ["B", "R", "G"],
+
+  "naya": ["R", "G", "W"],
+  "rgw": ["R", "G", "W"],
+  "red green white": ["R", "G", "W"],
+
+  "mardu": ["R", "W", "B"],
+  "rwb": ["R", "W", "B"],
+  "red white black": ["R", "W", "B"],
+
+  "temur": ["G", "U", "R"],
+  "gur": ["G", "U", "R"],
+  "green blue red": ["G", "U", "R"],
+
+  "abzan": ["W", "B", "G"],
+  "wbg": ["W", "B", "G"],
+  "white black green": ["W", "B", "G"],
+
+  "jeskai": ["U", "R", "W"],
+  "urw": ["U", "R", "W"],
+  "blue red white": ["U", "R", "W"],
+
+  "sultai": ["B", "G", "U"],
+  "bgu": ["B", "G", "U"],
+  "black green blue": ["B", "G", "U"]
+}
