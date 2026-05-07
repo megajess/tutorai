@@ -1,5 +1,31 @@
 # TASKS — Work Log
 
+## Ticket 005 — Chat Frontend
+
+### Status: In Review
+
+### Plan
+- [x] Flip ticket to In Progress
+- [x] `frontend/src/api/chat.ts` — typed `sendMessage(query)` with fetch, network + HTTP error handling
+- [x] `frontend/src/components/ChatWindow.vue` — message history, loading dots, error banner, textarea input
+- [x] `frontend/src/App.vue` — replace HelloWorld scaffold with ChatWindow
+- [x] `frontend/src/style.css` — strip scaffold-specific rules, keep CSS design tokens + base styles
+- [x] `frontend/.env.example` — `VITE_API_BASE_URL=http://localhost:8000`
+- [x] `npm run build` passes clean
+- [x] Check off acceptance criteria + flip ticket to In Review
+
+### Log
+- Ticket set to In Progress
+- `sendMessage()` catches network failures separately from HTTP errors — gives the user a readable message if the backend is down
+- Auto-scroll uses `nextTick` + `scrollTop = scrollHeight` — fires after user message and after assistant reply / loading state resolves
+- Textarea uses `field-sizing: content` for auto-grow up to 160px; Enter submits, Shift+Enter is a newline
+- Loading indicator: three bouncing dots (CSS `blink` animation, staggered delays)
+- Error banner displayed below message list; cleared on next successful submit
+- HelloWorld.vue scaffold left in place (unused, not imported) — can be deleted later
+- Ticket set to In Review
+
+---
+
 ## Ticket 004 — Chat API Endpoint
 
 ### Status: In Review
