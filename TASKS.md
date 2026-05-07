@@ -1,5 +1,31 @@
 # TASKS — Work Log
 
+## Ticket 004 — Chat API Endpoint
+
+### Status: In Review
+
+### Plan
+- [x] Install `github.com/go-chi/cors`
+- [x] `backend/config/config.go` — add `HTTPTimeout time.Duration` field (120s default)
+- [x] `backend/internal/llm/ollama.go` — `Generate()`, `UnavailableError` typed error
+- [x] `backend/internal/api/chat.go` — `ChatHandler`, `extractCardFilters()`, `writeJSON()`
+- [x] `backend/cmd/server/main.go` — wire shared `http.Client`, `retrieval.Client`, `ChatHandler`, CORS, `POST /chat`
+- [x] `backend/internal/api/chat_test.go` — integration tests with mock Ollama + data service
+- [x] `go test ./...` passes, `golangci-lint` clean
+- [x] Check off acceptance criteria + flip ticket to `In Review`
+
+### Log
+- Ticket set to `In Progress`
+- CORS: used `github.com/go-chi/cors` (approved by user) — allows `http://localhost:5173`, `POST` + `OPTIONS`, `Content-Type` header
+- Empty results flow through to LLM (LLM-in-the-loop approach) — LLM explains no matches found rather than a canned error response
+- Filter extraction is best-effort: color identity via `ColorLookup`, format via string match against known names, price via regex `$X`
+- Intent classification failure (Ollama unreachable during classification) falls back to `general` silently — intent errors never surface to the user
+- `HTTPTimeout`: 120s — generous for local LLM inference; single shared `http.Client` for all outbound calls
+- Decision logged for LLM-in-the-loop and filter extraction approach
+- Ticket set to `In Review`
+
+---
+
 ## Ticket 003 — Retrieval Layer & Data Service Client
 
 ### Status: In Review

@@ -2,6 +2,30 @@
 
 ---
 
+## 2026-05-07 — Empty retrieval results flow through to the LLM
+
+**Decision:** When the data service returns no results, the handler still calls the LLM with a prompt that states "No relevant context was found." It does not short-circuit with a canned error response.
+
+**Reasoning:** The LLM can craft a contextual, helpful reply explaining why nothing was found and suggesting how to adjust the query (e.g. relax the price limit, broaden the color identity). A canned response like "No cards found" is less useful and harder to improve later.
+
+**Consequences:** Every query always incurs an LLM call, even when retrieval returns nothing. Acceptable given local inference has no per-call cost.
+
+**Status:** Accepted
+
+---
+
+## 2026-05-07 — Deck building filter extraction is best-effort text scanning
+
+**Decision:** Color identity, format, and price are extracted from the user's query using `ColorLookup.Resolve()`, a string match against known format names, and a `$X` regex respectively. No LLM call is made for filter extraction.
+
+**Reasoning:** A second LLM call for structured extraction would double latency and add complexity. Simple text scanning catches the common cases ("golgari commander deck under $50") with zero extra cost. Missed filters result in a broader search, not a wrong answer — the LLM still synthesises a useful response from whatever is retrieved.
+
+**Consequences:** Unusual phrasings (e.g. "fifty dollar budget") may not be parsed. Acceptable for v1; can be improved with an extraction LLM call in a future ticket if query parsing proves insufficient.
+
+**Status:** Accepted
+
+---
+
 ## 2026-04-27 — Use Llama 3.1 8B via Ollama instead of a hosted API
 
 **Decision:** Run Llama 3.1 8B locally via Ollama for both development and initial deployment.

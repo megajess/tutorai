@@ -1,7 +1,10 @@
 // Package config loads environment variables for the TutorAI backend.
 package config
 
-import "os"
+import (
+	"os"
+	"time"
+)
 
 // Config holds all runtime configuration for the TutorAI backend.
 type Config struct {
@@ -10,6 +13,10 @@ type Config struct {
 	OllamaLLMModel    string
 	DataServiceURL    string
 	DataServiceAPIKey string
+	// HTTPTimeout is applied to the shared http.Client used for all outbound
+	// calls (Ollama and data service). Local LLM inference can be slow, so
+	// this is set generously.
+	HTTPTimeout time.Duration
 }
 
 // Load reads configuration from environment variables.
@@ -21,6 +28,7 @@ func Load() Config {
 		OllamaLLMModel:    getEnv("OLLAMA_LLM_MODEL", "llama3.1"),
 		DataServiceURL:    getEnv("DATA_SERVICE_URL", "http://localhost:8001"),
 		DataServiceAPIKey: getEnv("DATA_SERVICE_API_KEY", ""),
+		HTTPTimeout:       120 * time.Second,
 	}
 }
 
